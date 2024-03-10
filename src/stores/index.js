@@ -9,10 +9,7 @@ export const useIndexStore = defineStore('index', {
         },
         landState: 0,
     }),
-    getters: {
-        user: state => state.user,
-        userName: state => state.user.userName,
-    },
+
     actions: {
         //设置用户变量
         setUser(userInfo) {

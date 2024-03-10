@@ -1,25 +1,79 @@
 <template>
     <div class="body">
-        <div class="search-container">
-            <input class="search-input" type="text" placeholder="搜索文章" v-model="searchInput">
-            <button class="search-button" type="button" text="搜索" @click="search">搜索</button>
+        <div class="container">
+            <div class="search-container">
+                <input class="search-input" type="text" :placeholder="placeholderText" v-model="searchText">
+                <button class="search-button" type="button" text="搜索" @click="search">搜索</button>
+            </div>
+            <div class="content-container">
+                <div class="search-content-container">
+                    <div class="search-content" v-for="article in articles" :key="article.articleId"
+                        @click="toArticle(article.articleId)">
+                        <div class="article-base-info" style="display: flex; justify-content:space-between;">
+                            <div class="article-name">
+                                {{ article.articleName }}
+                            </div>
+                            <div class="article-info">
+                                <div class="article-author">{{ article.articleAuthor }}</div>
+                                <div class="article-date">{{ article.articleDate }}</div>
+                            </div>
+                        </div>
+                        <div class="article-abstract">
+                            {{ article.articleAbstract }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
 
 <script>
+const { searchArticle } = require("../axios/articlesRequest");
+import { useArticleStore } from "@/stores/article";
+import { storeToRefs } from "pinia";
 
 export default ({
+    setup() {
+        const articleStore = useArticleStore();
+        const { articles } = storeToRefs(articleStore);
+        const { setArticles } = articleStore;
 
+
+        return {
+            articles,
+            setArticles
+        }
+    },
+    created() {
+        // 共用的获取articles清空 不然会出现未搜索就渲染数据
+        this.setArticles([]);
+    },
     data() {
         return {
-            searchInput: "",
+            searchText: "",
+            placeholderText: "请输入搜索关键词"
         }
     },
 
     methods: {
         search() {
-            console.log(this.searchInput);
+            if (this.searchText != "") {
+                searchArticle(this.searchText).then((res) => {
+                    this.setArticles(res.data);
+                }).catch((error) => {
+                    console.log(error);
+                })
+            }
+            else {
+                this.placeholderText = "搜索词不能为空!";
+            }
+        },
+        toArticle(articleId) {
+            this.$router.push({
+                path: '/articles/' + articleId,
+            })
         }
     }
 })
@@ -34,8 +88,41 @@ export default ({
     align-items: center;
 }
 
+.container {
+    width: 100%;
+    display: block;
+    justify-content: center;
+    align-items: center;
+}
+
+.content-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-content-container {
+    width: 95%;
+    margin-top: 10px;
+    display: block;
+    justify-content: center;
+    align-items: center;
+}
+
+.search-content {
+    width: 100%;
+    cursor: pointer;
+    border: 1px solid grey;
+    padding: 5px;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.search-content:hover {
+    background-color: rgba(240, 240, 240, 0.3);
+}
+
 .search-container {
-    width: 80%;
+    width: 100%;
     display: flex;
     justify-content: space-evenly;
     align-items: center;

@@ -29,12 +29,13 @@
 <script>
 const { postLogin, getUserInfoByToken } = require('../axios/userRequest')
 import { useIndexStore } from '../stores/index'
+import { storeToRefs } from 'pinia';
 
 export default ({
     setup() {
         const store = useIndexStore()
 
-        const { userInfo } = store.$state;
+        const { userInfo } = storeToRefs(store);
         const { setUser, clearUser } = store;
 
         return {
@@ -89,7 +90,6 @@ export default ({
                             getUserInfoByToken(res.data)
                                 .then((info) => {
                                     this.setUser(info.data);
-                                    console.log(this.userInfo);
                                 })
                             this.stateCode = 1;
                             this.$router.push("/home");

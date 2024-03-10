@@ -2,8 +2,10 @@
     <div>
         <div class="menu-container">
             <div class="menu-bar">
-                <div class="menu-item" :class="{ active: activeItem === 1 }" @click="selcetItem(1)">推荐</div>
-                <div class="menu-item" :class="{ active: activeItem === 2 }" @click="selcetItem(2)">最新</div>
+                <div class="menu-item" :class="{ active: activeItem === 1 }" @click="selcetItem(1)">综合</div>
+                <div class="menu-item" :class="{ active: activeItem === 2 }" @click="selcetItem(2)">前端</div>
+                <div class="menu-item" :class="{ active: activeItem === 3 }" @click="selcetItem(3)">后端</div>
+                <div class="menu-item" :class="{ active: activeItem === 4 }" @click="selcetItem(4)">工具</div>
             </div>
         </div>
     </div>
@@ -17,31 +19,28 @@ export default ({
     setup() {
         const articleStore = useArticleStore();
 
-        const { articleShowMethod } = storeToRefs(articleStore);
-        const { setArticleShowMethod } = articleStore;
+        const { articleRuleState } = storeToRefs(articleStore);
+        const { setArticleRuleState } = articleStore;
 
         return {
-            articleShowMethod,
-            setArticleShowMethod,
+            articleRuleState,
+            setArticleRuleState,
         }
     },
 
     data() {
         return {
             activeItem: 1,
-            methods: ["recommend", "now"],
+            ruleState: ["comprehensive", "fore-web", "rear-web", "tool"],
         }
     },
     methods: {
-        //选择推荐还是最新的排序页面
+        // 选择点击item
         selcetItem(index) {
             this.activeItem = index;
-            this.setArticleShowMethod(this.methods[index - 1]);
+            this.setArticleRuleState(this.ruleState[index - 1]);
         }
     },
-    mounted() {
-
-    }
 })
 
 </script>

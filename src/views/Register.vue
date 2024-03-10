@@ -47,8 +47,6 @@ export default ({
     methods: {
         register() {
             const pattern = /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
-            console.log(this.user.username);
-            console.log(this.user.password);
             if (this.user.username == "" || this.user.password == "") {
                 return; // 返回
             }
@@ -65,6 +63,9 @@ export default ({
                     .then((res) => {
                         if (res.data == -1) {
                             this.registerMessage = "已有重复用户!换个名称吧!";
+                        }
+                        else if (res.data == -2) {
+                            this.registerMessage = "该邮箱已经注册!";
                         }
                         else if (res.data == 1) {
                             console.log(res, "注册成功");

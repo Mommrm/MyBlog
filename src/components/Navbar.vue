@@ -33,17 +33,20 @@
 
 <script>
 import { useIndexStore } from '../stores/index'
+import { storeToRefs } from 'pinia';
+const { getUserInfoByToken } = require("../axios/userRequest");
 
 export default {
     setup() {
         const store = useIndexStore()
 
-        const { userInfo } = store.$state;
-        const { clearUser } = store;
+        const { userInfo } = storeToRefs(store);
+        const { clearUser, setUser } = store;
 
         return {
             userInfo,
-            clearUser
+            clearUser,
+            setUser,
         }
     },
     data() {
@@ -59,6 +62,17 @@ export default {
                 toLand: 5,
                 toLogout: 6,
             },
+        }
+    },
+    created() {
+        //有token就获取用户信息
+        let token = localStorage.getItem("token");
+        if (token) {
+            getUserInfoByToken(token).then((res) => {
+                this.setUser(res.data);
+            }).catch((error) => {
+                console.log(error);
+            })
         }
     },
     methods: {
@@ -85,7 +99,6 @@ export default {
             }
             else if (path == 6) {
                 this.clearUser();
-                console.log(this.userInfo);
                 localStorage.removeItem("token");
             }
         },

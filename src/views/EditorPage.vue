@@ -10,28 +10,34 @@
             </div>
         </div>
         <div class="container-menu-bar">
-            <div class="bar-item">
+            <div class="bar-item" @click="HandleText(0)">
                 标题
             </div>
-            <div class="bar-item">
+            <div class="bar-item" @click="HandleText(1)">
                 斜体
             </div>
-            <div class="bar-item">
-                粗体
-            </div>
-            <div class="bar-item">
+            <div class="bar-item" @click="HandleText(2)">
                 引用
+            </div>
+            <div class="bar-item" @click="HandleText(3)">
+                代码
             </div>
         </div>
         <div class="container-main">
             <div class="input-area">
                 <div class="textarea-container">
                     <textarea class="input-textarea" v-model="article.content" placeholder="支持简单的markdown语法"
-                        @input="inputText()" @keydown.enter="checkEnter"></textarea>
+                        @input="inputText()" @keydown.enter="checkEnter" id="text"></textarea>
                 </div>
             </div>
             <div class="show-area">
                 <div class="body-preview" v-html="this.html"></div>
+            </div>
+            <!-- 弹窗 -->
+            <div class="aside-area" v-if="openAside">
+                <AsideCard :articleTitle="article.topic" @cancel="(closeflag) => {
+                    openAside = closeflag;
+                }"></AsideCard>
             </div>
         </div>
         <div class="info-area">
@@ -48,17 +54,37 @@
 </template>
 
 <script>
+import AsideCard from "@/mineCompoents/AsideCard.vue";
 import { useIndexStore } from "../stores/index"
-const { createArticle } = require('../axios/articlesRequest')
+import { useArticleStore } from '@/stores/article';
+import { parseMarkdown } from '../javaScript/markdownParse'
+import { storeToRefs } from 'pinia';
 
 export default ({
     setup() {
         const store = useIndexStore();
+        const articleStore = useArticleStore();
 
-        const { userInfo } = store.$state;
+        const { userInfo } = storeToRefs(store);
+        const { publishArticle } = storeToRefs(articleStore);
+        const { setPublishArticle } = articleStore;
 
         return {
             userInfo,
+            publishArticle,
+            setPublishArticle,
+        };
+    },
+    components: {
+        AsideCard,
+    },
+    //在未进入该组件时就执行
+    beforeRouteEnter(to, from, next) {
+        // 检查用户是否有权限访问该路由
+        if (localStorage.getItem("token")) {
+            next(); // 继续路由导航
+        } else {
+            next('/landpage'); // 重定向到错误页面或其他路由
         }
     },
     data() {
@@ -73,70 +99,50 @@ export default ({
                 abstract: "",
                 content: "",
             },
+            functions: [
+                "head",
+                "italic",
+                "quote",
+                "code"
+            ],
             html: "",
-        }
-    },
-    mounted() {
-        setInterval(() => {
-            this.html = this.parseMarkdown(this.article.content);
-        }, 2000);
+            openAside: false,
+
+        };
     },
     methods: {
         //输入时调用更新文章内容
         inputText() {
-            this.textNum = this.article.content.length;
+            //解析器调用
+            this.html = parseMarkdown(this.article.content);
         },
         //更新行数
         checkEnter(event) {
             if (event.key === "Enter") {
-                console.log(this.enterNum);
                 this.enterNum++;
             }
-        },
-        parseMarkdown(markdown) {
-            // 创建一个匹配所有Markdown语法的正则表达式
-            const regex = /^#{1,6}/;
-            // 将Markdown字符串拆分成行
-            const lines = markdown.split('\n');
-            // 遍历每一行，将Markdown语法替换为HTML
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i];
-                // 匹配当前行中的Markdown语法
-                const match = regex.exec(line);
-                // 如果有匹配结果，则将Markdown语法替换为HTML
-                if (match) {
-                    console.log(match)
-                    lines[i] = this.parseHeading(match[0], match[0].length);
-                }
-            }
-            // 将行重新合并成单个字符串
-            return lines.join('\n');
-        },
-        parseHeading(text, num) {
-            var tempHTML = `<h` + num + `>` + `${text}` + `</h` + num + `>`
-            console.log(tempHTML);
-            // 将Markdown的标题语法转换为HTML
-            return tempHTML;
         },
         saveToDraft() {
             //redis缓存草稿 并退出发布页面
             this.$router.push("/community");
         },
+        //发布文章
         publishArticle() {
+            this.openAside = true; //
             const now = Date.now();
             this.article.date = new Date(now);
             this.article.author = this.userInfo.userName;
+            const tempArticle = {
+                topic: this.article.topic,
+                author: this.article.author,
+                date: this.article.date,
+                content: this.article.content,
+            }
+            this.setPublishArticle(tempArticle);
+        },
 
-            //发布文章
-            createArticle(this.article.topic, this.article.author, this.article.date, this.html)
-                .then((res) => {
-                    console.log(res);
-                    this.$router.push("/community");
-                }).catch((error) => {
-                    console.log(error);
-                })
-        }
-    }
+    },
+
 })
 
 </script>
@@ -210,7 +216,7 @@ export default ({
 }
 
 .bar-item:hover {
-    background-color: rgb(231, 231, 231);
+    background-color: rgb(247, 247, 247);
 }
 
 .container-main {
@@ -221,7 +227,7 @@ export default ({
 
 .input-area {
     width: 50%;
-    background-color: #eee;
+    border-left: 1px solid rgb(212, 212, 212);
 }
 
 .show-area {
@@ -259,9 +265,19 @@ export default ({
     max-height: 90vh;
     border: none;
     outline: none;
-    background-color: #eee;
+    background-color: rgb(247, 247, 247);
+    font-size: larger;
 }
 
+.aside-area {
+    position: fixed;
+    z-index: 1;
+    width: 500px;
+    height: 375px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
 
 @media all and (max-width: 700px) {
     .show-area {

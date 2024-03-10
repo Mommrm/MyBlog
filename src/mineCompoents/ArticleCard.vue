@@ -22,20 +22,58 @@
 
 <script>
 const { getArticles } = require('../axios/articlesRequest')
+import { useArticleStore } from '@/stores/article';
+import { storeToRefs } from 'pinia'
+import { watch } from 'vue';
 
 export default ({
-    data() {
+    setup() {
+        const articleStore = useArticleStore();
+
+        const { articleRuleState, articleShowMethod, articles } = storeToRefs(articleStore);
+        const { setArticles, setArticleShowMethod } = articleStore;
+
+        //监听用户选择哪个部分的分类
+        watch(articleRuleState, (newValue, oldValue) => {
+            //通过session来保存当前的展示方法
+            let method = sessionStorage.getItem("method");
+            getArticles(0, newValue, method).then((res) => {
+                setArticles(res.data);
+                sessionStorage.setItem("rule", newValue);
+            }).catch((error) => {
+                console.log(error);
+            })
+        })
+        //监听用户选择的展示方法 默认是推荐显示
+        watch(articleShowMethod, (newValue, oldValue) => {
+            //通过session来保存当前的分类规则 默认是第0页 以后可以更改
+            let rule = sessionStorage.getItem("rule");
+            getArticles(0, rule, newValue).then((res) => {
+                setArticles(res.data);
+                sessionStorage.setItem("method", newValue);
+            }).catch((error) => {
+                console.log(error);
+            })
+        })
         return {
-            articles: []
+            articleRuleState,
+            articleShowMethod,
+            setArticleShowMethod,
+            articles,
+            setArticles,
         }
     },
     mounted() {
         // 开始默认查询第一页数据
-        getArticles(0).then((res) => {
-            this.articles = res.data;
+        getArticles(0, this.articleRuleState, this.articleShowMethod).then((res) => {
+            this.setArticles(res.data);
         }).catch((error) => {
             console.log(error);
         });
+    },
+    data() {
+        return {
+        }
     },
     methods: {
         toArticle(articleId) {

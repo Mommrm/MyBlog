@@ -24,19 +24,36 @@
                     <div>工具</div>
                 </div>
             </div>
+            <div class="classify-item">
+                <div class="item" :class="{ active: activeItem === 5 }" @click="selcetItem(5)">
+                    <div>其他</div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
+import { useArticleStore } from '@/stores/article';
+import { storeToRefs } from 'pinia';
 
 export default ({
-    components: {
+    setup() {
+        const articleStore = useArticleStore();
+
+        const { articleRuleState } = storeToRefs(articleStore);
+        const { setArticleRuleState } = articleStore;
+
+        return {
+            articleRuleState,
+            setArticleRuleState,
+        }
     },
 
     data() {
         return {
             activeItem: 1,
+            ruleState: ["comprehensive", "fore-web", "rear-web", "tool", "other"],
         }
     },
 
@@ -47,6 +64,7 @@ export default ({
         // 选择点击item
         selcetItem(index) {
             this.activeItem = index;
+            this.setArticleRuleState(this.ruleState[index - 1]);
         }
     }
 })

@@ -8,7 +8,10 @@
                 <div class="articlemenu">
                     <ArticleMenu></ArticleMenu>
                 </div>
-                <!-- 下滑加载 vuex 加载文章数据(根据文章分类) -->
+                <!--当手机屏幕时才显示-->
+                <div class="phone-articlemenu">
+                    <PhoneArticleMenu></PhoneArticleMenu>
+                </div>
                 <div class="articlecard">
                     <ArticleCard></ArticleCard>
                 </div>
@@ -21,12 +24,18 @@
 import ArticleCard from '@/mineCompoents/ArticleCard.vue';
 import ArticleClassify from '@/mineCompoents/ArticleClassify.vue';
 import ArticleMenu from '@/mineCompoents/ArticleMenu.vue';
+import PhoneArticleMenu from '@/mineCompoents/PhoneArticleMenu.vue';
 
 export default ({
     components: {
         ArticleCard,
         ArticleClassify,
         ArticleMenu,
+        PhoneArticleMenu
+    },
+    created() {
+        sessionStorage.setItem("method", "recommend");
+        sessionStorage.setItem("rule", "comprehensive");
     },
     data() {
         return {
@@ -63,11 +72,25 @@ export default ({
 
 .articlemenu {
     margin-bottom: 1vh;
+    display: block;
+}
+
+.phone-articlemenu {
+    display: none;
+    margin-bottom: 1vh;
 }
 
 @media all and (max-width: 768px) {
     .article-classification {
         display: none;
+    }
+
+    .articlemenu {
+        display: none;
+    }
+
+    .phone-articlemenu {
+        display: block;
     }
 
     .articles-container {
